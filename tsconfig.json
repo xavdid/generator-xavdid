@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017", // node 8
+    "strict": true,
+    "lib": ["dom", "es2017"]
+  },
+  "include": ["generators/app/index.ts"]
+}
