@@ -8,7 +8,7 @@ const name = 'test'
 describe('generator-xavdid:app', () => {
   it('creates files', async () => {
     const runDir = await helpers
-      .run(join(__dirname, '../generators/app'))
+      .run(join(__dirname, '../app'))
       // since Backend has no packages. typedi fails and it's weird. so use CLI
       .withPrompts({ area: ['CLI'], name })
 
