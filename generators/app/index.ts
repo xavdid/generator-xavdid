@@ -7,6 +7,39 @@ interface Bitmap {
   [x: string]: boolean
 }
 
+const pkgJSON = {
+  version: '0.0.0',
+  description: '',
+  main: 'lib/index.js',
+  typings: 'lib/index.d.ts',
+  scripts: {
+    build: 'tsc',
+    lint: 'tslint -p .',
+    test: 'jest',
+    posttest: 'yarn lint',
+    release: 'npx np'
+  },
+  keywords: [],
+  files: ['lib/*.js', 'lib/index.d.ts'],
+  author: {
+    name: 'David Brownman',
+    email: 'beamneocube@gmail.com',
+    url: 'https://davidbrownman.com'
+  },
+  license: 'ISC',
+  jest: {
+    transform: {
+      '^.+\\.tsx?$': 'ts-jest'
+    },
+    testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node']
+  },
+  prettier: {
+    semi: false,
+    singleQuote: true
+  }
+}
+
 export = class App extends Generator {
   answers: Bitmap = {}
   options!: { name?: string }
@@ -83,12 +116,29 @@ export = class App extends Generator {
   }
 
   writing() {
-    this.fs.copyTpl(this.templatePath(), this.destinationPath(), {
-      name: this.name
+    this.fs.copyTpl(
+      this.templatePath(),
+      this.destinationPath(),
+      {
+        name: this.name
+      },
+      {},
+      { globOptions: { dot: true } }
+    )
+
+    // if there's a package.json in a subfolder, it messes up `npm pack`, so here we are
+    this.fs.writeJSON(this.destinationPath('package.json'), {
+      name: this.name,
+      ...pkgJSON
     })
   }
 
   async install() {
+    if (process.env.NODE_ENV === 'test') {
+      this.log('testing, no install')
+      return
+    }
+
     const { backend } = this.answers
 
     const deps: { [x: string]: string[] } = {
@@ -134,6 +184,6 @@ export = class App extends Generator {
   }
 
   end() {
-    this.log(`You're all ${chalk.greenBright('set')}!`)
+    this.log(`${chalk.greenBright("You're all set")}!`)
   }
 }

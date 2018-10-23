@@ -9,10 +9,11 @@
     "url": "https://davidbrownman.com"
   },
   "files": [
-    "generators"
+    "generators/app/index.js",
+    "generators/app/templates"
   ],
   "scripts": {
-    "test": "jest",
+    "test": "NODE_ENV=test jest",
     "build": "tsc",
     "release": "npx np",
     "lint": "tslint -c generators/app/templates/tslint.json -p ."
