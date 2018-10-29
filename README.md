@@ -1,6 +1,6 @@
 # generator-xavdid
 
-[![npm](https://img.shields.io/npm/v/:package.svg)](https://npmjs.org/package/generator-xavdid)
+[![npm](https://img.shields.io/npm/v/generator-xavdid.svg)](https://npmjs.org/package/generator-xavdid)
 
 [![David](https://img.shields.io/david/xavdid/generator-xavdid.svg)](https://david-dm.org/xavdid/generator-xavdid)
 
