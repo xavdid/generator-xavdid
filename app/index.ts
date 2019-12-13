@@ -16,7 +16,7 @@ const pkgJSON = {
     build: 'tsc',
     lint: 'tslint -p .',
     test: 'jest',
-    posttest: 'yarn lint',
+    validate: 'yarn test && yarn lint',
     release: 'npx np'
   },
   keywords: [],

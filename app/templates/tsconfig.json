@@ -2,14 +2,11 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./lib",
+    // suggested defaults: https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
     "module": "commonjs",
-    "target": "ES2017",
+    "target": "es2018",
     "strict": true,
-    "lib": [
-      // es6 defaults
-      "es2017",
-      "dom"
-    ]
+    "lib": ["es2018"]
     // "jsx": "react"
     // "declaration": true
   },
