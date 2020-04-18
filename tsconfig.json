@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2017", // node 8
+    "target": "es2018",
     "strict": true,
-    "lib": ["dom", "es2017"]
+    "lib": ["es2018"]
   },
-  "include": ["app/index.ts"]
+  "include": ["app/index.ts"],
+  "exclude": ["app/templates/src"]
 }
