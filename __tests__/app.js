@@ -1,4 +1,3 @@
-'use strict'
 const { join } = require('path')
 const assert = require('yeoman-assert')
 const helpers = require('yeoman-test')
@@ -15,9 +14,11 @@ describe('generator-xavdid:app', () => {
     assert.file([
       'src/index.ts',
       'tsconfig.json',
-      '__tests__/index.test.ts',
+      'src/__tests__/index.test.ts',
       '.gitignore',
-      'package.json'
+      'package.json',
+      '.vscode/settings.json',
+      '.eslintrc.js',
     ])
 
     const pkg = require(join(runDir, name, 'package.json'))

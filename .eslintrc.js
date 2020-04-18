@@ -16,5 +16,6 @@ module.exports = {
     'app/templates/src/index.ts',
     'app/templates/__tests__/index.test.ts',
     'app/index.js',
+    '__tests__',
   ],
 }
