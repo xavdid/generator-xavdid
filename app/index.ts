@@ -4,6 +4,8 @@ import chalk from 'chalk'
 import { inspect } from 'util'
 import Generator = require('yeoman-generator')
 
+const ESLINT_CONFIG_NAME = 'xavdid'
+
 interface Bitmap {
   [x: string]: boolean
 }
@@ -15,13 +17,13 @@ const pkgJSON = {
   typings: 'lib/index.d.ts',
   scripts: {
     build: 'tsc',
-    lint: 'eslint src --ext .ts,.tsx',
+    lint: 'eslint src',
     test: 'jest',
     validate: 'yarn test && yarn lint',
     release: 'npx np',
   },
   keywords: [],
-  files: ['lib/*.js', 'lib/index.d.ts'],
+  files: ['lib/*.js', 'lib/*.d.ts'],
   author: {
     name: 'David Brownman',
     email: 'beamneocube@gmail.com',
@@ -29,6 +31,7 @@ const pkgJSON = {
   },
   license: 'ISC',
   jest: {
+    verbose: true, // list all tests as they're going
     roots: ['<rootDir>/src'],
     testMatch: [
       '**/__tests__/**/*.+(ts|tsx|js)',
@@ -131,44 +134,34 @@ export = class App extends Generator {
       { globOptions: { dot: true } }
     )
 
+    // we'll copy and rename it again in a sec
+    this.fs.delete('gitignore')
+
     // if there's a package.json in a subfolder, it messes up `npm pack`, so here we are
     this.fs.writeJSON(this.destinationPath('package.json'), {
       name: this.name,
       ...pkgJSON,
     })
 
-    const { frontend } = this.answers
+    // also, npm turns `.gitignore` files into `.npmignore` without asking, so don't release it
+    // https://github.com/npm/npm/issues/1862
+    this.fs.write(
+      this.destinationPath('.gitignore'),
+      this.templatePath('gitignore')
+    )
+
     // this is here so I can tweak it dynamically based on input
     const eslintConfig = {
       root: true,
-      parser: '@typescript-eslint/parser',
-      plugins: ['@typescript-eslint', 'jest'],
-      extends: [
-        'standard-with-typescript',
-        ...(frontend ? ['plugin:react/recommended'] : []),
-        'plugin:jest/recommended',
-        'prettier',
-      ],
+      extends: ESLINT_CONFIG_NAME,
       parserOptions: {
-        project: './tsconfig.json',
-      },
-      rules: {
-        '@typescript-eslint/space-before-function-paren': 'off',
-        '@typescript-eslint/strict-boolean-expressions': 'off',
-        '@typescript-eslint/explicit-function-return-type': 'off',
+        project: `${__dirname}/tsconfig.json`,
       },
     }
 
     this.fs.write(
       this.destinationPath('.eslintrc.js'),
-      [
-        '// default rule changes',
-        '// this is handled by prettier',
-        "// '@typescript-eslint/space-before-function-paren': 0,",
-        '// this is annoying for variables that are X | undefined',
-        "// '@typescript-eslint/strict-boolean-expressions': 0",
-        `module.exports = ${inspect(eslintConfig)}`,
-      ].join('\n')
+      [`module.exports = ${inspect(eslintConfig)}`].join('\n')
     )
   }
 
@@ -178,7 +171,7 @@ export = class App extends Generator {
       return
     }
 
-    const { backend, frontend } = this.answers
+    const { backend, webserver, cli } = this.answers
 
     const deps: { [x: string]: string[] } = {
       frontend: ['react', 'react-dom'],
@@ -189,24 +182,14 @@ export = class App extends Generator {
     const devDeps = ['jest']
 
     const untypedDevDeps = [
-      'typescript',
+      // 'typescript',
       'ts-jest',
       // linting
-      'eslint',
-      'eslint-config-prettier',
-      'eslint-plugin-standard',
-      'eslint-config-standard-with-typescript',
-      'eslint-plugin-import',
-      'eslint-plugin-jest',
-      'eslint-plugin-node',
-      'eslint-plugin-promise',
-      ...(frontend ? ['eslint-plugin-react'] : []),
-      '@typescript-eslint/eslint-plugin',
-      '@typescript-eslint/parser',
+      `eslint-config-${ESLINT_CONFIG_NAME}`,
       // formatting
       'prettier',
       // types
-      ...(backend ? ['@types/node'] : []),
+      ...(backend || webserver || cli ? ['@types/node'] : []),
     ]
 
     // only bring the dependencies we need for this type of project
@@ -236,6 +219,15 @@ export = class App extends Generator {
       dev: true,
       exact: true,
     })
+
+    this.log(`\nInstalling linting ${chalk.cyanBright.bold('peerDeps')}`)
+    // install peer deps of my eslint config, which is all the linting stuff it depends on
+    this.spawnCommandSync('npx', [
+      'install-peerdeps',
+      '--yarn',
+      '--dev',
+      `eslint-config-${ESLINT_CONFIG_NAME}`,
+    ])
   }
 
   end(): void {

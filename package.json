@@ -13,8 +13,10 @@
     "app/templates"
   ],
   "scripts": {
+    "pretest": "yarn build",
     "test": "NODE_ENV=test jest",
     "build": "tsc",
+    "prerelease": "yarn build",
     "release": "npx np",
     "lint": "eslint app --ext .ts"
   },

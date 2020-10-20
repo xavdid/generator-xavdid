@@ -12,17 +12,23 @@ Built on the awesome shoulders of [Yeoman](http://yeoman.io).
 
 ## Installation
 
-First, install [Yeoman](http://yeoman.io) and `generator-xavdid` using [npm](https://www.npmjs.com/) (we assume you have pre-installed [node.js](https://nodejs.org/)).
+First, install [Yeoman](http://yeoman.io) and `generator-xavdid` using the tool of your choice.
 
 ```bash
-npm install -g yo generator-xavdid
+yarn global add yo generator-xavdid
 ```
 
-Then generate your new project:
+Then, generate your new project:
 
 ```bash
 yo xavdid
 ```
+
+## Development
+
+Most of the work will take place in `app/index.ts`, to focus there!
+
+To test the unreleased version, run `yo ../path/to/this/folder`
 
 ## License
 

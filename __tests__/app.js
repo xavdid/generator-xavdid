@@ -21,8 +21,15 @@ describe('generator-xavdid:app', () => {
       '.eslintrc.js',
     ])
 
+    assert.noFile(['.npmignore', 'gitignore'])
+
     const pkg = require(join(runDir, name, 'package.json'))
     expect(pkg.name).toEqual(name)
+
+    const eslintRc = require(join(runDir, name, '.eslintrc.js'))
+    expect(eslintRc.extends).toEqual('xavdid')
+    expect(eslintRc.root).toEqual(true)
+    expect(eslintRc.parserOptions.project).toBeDefined()
   })
 
   // would be cool to have tests around hndling the path
