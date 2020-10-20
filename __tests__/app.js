@@ -1,6 +1,7 @@
 const { join } = require('path')
 const assert = require('yeoman-assert')
 const helpers = require('yeoman-test')
+const { readFileSync } = require('fs')
 
 const name = 'test'
 
@@ -10,6 +11,8 @@ describe('generator-xavdid:app', () => {
       .run(join(__dirname, '../app'))
       // since Backend has no packages. typedi fails and it's weird. so use CLI
       .withPrompts({ area: ['CLI'], name })
+
+    const resPath = (fname) => join(runDir, name, fname)
 
     assert.file([
       'src/index.ts',
@@ -21,15 +24,20 @@ describe('generator-xavdid:app', () => {
       '.eslintrc.js',
     ])
 
-    assert.noFile(['.npmignore', 'gitignore'])
+    assert.noFile(['.npmignore', 'gitignore', 'eslint.js'])
 
-    const pkg = require(join(runDir, name, 'package.json'))
+    const pkg = require(require.resolve(resPath('package.json')))
     expect(pkg.name).toEqual(name)
 
-    const eslintRc = require(join(runDir, name, '.eslintrc.js'))
+    const eslintRc = require(resPath('.eslintrc.js'))
     expect(eslintRc.extends).toEqual('xavdid')
     expect(eslintRc.root).toEqual(true)
+    // by the time we evaluate it, `__dirname` will have been evaluated, so we can't assert much about it
     expect(eslintRc.parserOptions.project).toBeDefined()
+
+    const gitIgnore = readFileSync(resPath('.gitignore'), 'utf-8')
+    const lines = gitIgnore.split('\n')
+    expect(lines.length).toBeGreaterThan(20)
   })
 
   // would be cool to have tests around hndling the path

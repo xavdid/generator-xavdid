@@ -1,7 +1,6 @@
 import typedInstall from 'typed-install'
 import { basename } from 'path'
 import chalk from 'chalk'
-import { inspect } from 'util'
 import Generator = require('yeoman-generator')
 
 const ESLINT_CONFIG_NAME = 'xavdid'
@@ -89,6 +88,7 @@ export = class App extends Generator {
     const needName = currentDir === projectsRoot
 
     // we're guessing, double check
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!this.name) {
       const { name } = await this.prompt([
         {
@@ -134,9 +134,6 @@ export = class App extends Generator {
       { globOptions: { dot: true } }
     )
 
-    // we'll copy and rename it again in a sec
-    this.fs.delete('gitignore')
-
     // if there's a package.json in a subfolder, it messes up `npm pack`, so here we are
     this.fs.writeJSON(this.destinationPath('package.json'), {
       name: this.name,
@@ -145,24 +142,20 @@ export = class App extends Generator {
 
     // also, npm turns `.gitignore` files into `.npmignore` without asking, so don't release it
     // https://github.com/npm/npm/issues/1862
-    this.fs.write(
-      this.destinationPath('.gitignore'),
-      this.templatePath('gitignore')
-    )
-
-    // this is here so I can tweak it dynamically based on input
-    const eslintConfig = {
-      root: true,
-      extends: ESLINT_CONFIG_NAME,
-      parserOptions: {
-        project: `${__dirname}/tsconfig.json`,
+    const renames: Array<{ from: string; to: string }> = [
+      {
+        from: 'gitignore',
+        to: '.gitignore',
       },
-    }
+      {
+        from: 'eslint.js',
+        to: '.eslintrc.js',
+      },
+    ]
 
-    this.fs.write(
-      this.destinationPath('.eslintrc.js'),
-      [`module.exports = ${inspect(eslintConfig)}`].join('\n')
-    )
+    renames.forEach(({ from, to }) => {
+      this.fs.move(this.destinationPath(from), this.destinationPath(to))
+    })
   }
 
   async install(): Promise<void> {
@@ -200,11 +193,11 @@ export = class App extends Generator {
       }
     })
 
-    if (prodDeps.length) {
+    if (prodDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('prod')} deps, one sec...`)
       await typedInstall(prodDeps, { packageManager: 'yarn', exact: true })
     }
-    if (devDeps.length) {
+    if (devDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('dev')} deps, one sec...`)
       await typedInstall(devDeps, {
         packageManager: 'yarn',
