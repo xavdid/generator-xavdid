@@ -26,7 +26,7 @@ const pkgJSON = {
   author: {
     name: 'David Brownman',
     email: 'beamneocube@gmail.com',
-    url: 'https://davidbrownman.com',
+    url: 'https://xavd.id',
   },
   license: 'ISC',
   jest: {
