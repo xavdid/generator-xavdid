@@ -24,25 +24,16 @@
     "yeoman-generator"
   ],
   "dependencies": {
-    "chalk": "^2.4.1",
-    "typed-install": "^1.1.1",
-    "yeoman-generator": "^3.1.1"
+    "chalk": "^4.1.2",
+    "typed-install": "^2",
+    "yeoman-generator": "^4"
   },
   "devDependencies": {
     "@types/yeoman-generator": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^4",
     "@typescript-eslint/parser": "^4.4.1",
     "eslint": "^7",
-    "eslint-config-prettier": "^6.13.0",
-    "eslint-config-standard-with-typescript": "^19.0.1",
-    "eslint-config-xavdid": "1.0.0",
-    "eslint-plugin-import": "^2",
-    "eslint-plugin-jest": "^24.1.0",
-    "eslint-plugin-node": "^11",
-    "eslint-plugin-promise": "^4",
-    "eslint-plugin-react": "^7.21.4",
-    "eslint-plugin-react-hooks": "^4.1.2",
-    "eslint-plugin-standard": "^4",
+    "eslint-config-xavdid": "^2.0.1",
     "jest": "^23.5.0",
     "prettier": "2.0.4",
     "typescript": "^4.0.3",
