@@ -20,7 +20,8 @@ describe('generator-xavdid:app', () => {
       'src/__tests__/index.test.ts',
       '.gitignore',
       'package.json',
-      '.vscode/settings.json',
+      // not sure why this was here, afaik nothing creates it
+      // '.vscode/settings.json',
       '.eslintrc.js',
     ])
 

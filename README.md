@@ -2,11 +2,9 @@
 
 [![npm](https://img.shields.io/npm/v/generator-xavdid.svg)](https://npmjs.org/package/generator-xavdid)
 
-[![David](https://img.shields.io/david/xavdid/generator-xavdid.svg)](https://david-dm.org/xavdid/generator-xavdid)
-
 ## The Why
 
-I've been writing a bunch of typescript and had gotten frustrated after setting up the same few tools, build steps, and testing frameworks repeatedly. So, I set up a generator to scaffold out projects just how I like them. Feel free to use it if you want to write typescript code using the same starting setup as I do!
+I've been writing a bunch of typescript and had gotten frustrated after setting up the same few tools, build steps, and testing frameworks repeatedly. So, I set up a generator to scaffold out projects just how I like them. Feel free to use it if you want to write typescript code using the same starting setup as I do! Also sets up my [eslint config](https://github.com/xavdid/eslint-config-xavdid).
 
 Built on the awesome shoulders of [Yeoman](http://yeoman.io).
 
@@ -32,4 +30,4 @@ To test the unreleased version, run `yo ../path/to/this/folder`
 
 ## License
 
-MIT © [David Brownman](https://davidbrownman.com)
+MIT © [David Brownman](https://xavd.id)

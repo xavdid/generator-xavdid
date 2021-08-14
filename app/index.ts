@@ -1,9 +1,14 @@
 import typedInstall from 'typed-install'
 import { basename } from 'path'
-import chalk from 'chalk'
+import { promises } from 'fs'
+
+import chalk = require('chalk')
 import Generator = require('yeoman-generator')
 
-const ESLINT_CONFIG_NAME = 'xavdid'
+const { readFile, writeFile } = promises
+
+// this exact name is important
+const ESLINT_CONFIG_FILE = '.eslintrc.js'
 
 interface Bitmap {
   [x: string]: boolean
@@ -105,12 +110,28 @@ export = class App extends Generator {
     }
 
     if (basename(this.destinationRoot()) !== this.name) {
+      // set new destination root
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.destinationRoot(this.destinationPath(this.name!))
     }
 
     // Q2
-    const choices = ['Backend', 'Frontend', 'Webserver', 'CLI']
+    // either FE or "other"
+    this._answer(
+      await this.prompt([
+        {
+          type: 'confirm',
+          default: false,
+          name: 'frontend',
+          message: 'Is this a front-end project?',
+        },
+      ])
+    )
+    if (this.answers.frontend) {
+      return
+    }
+
+    const choices = ['Backend', 'Webserver', 'CLI']
     const { area } = await this.prompt([
       {
         type: 'checkbox',
@@ -123,7 +144,58 @@ export = class App extends Generator {
     this._answer(this._parseArea(choices, area))
   }
 
-  writing(): void {
+  // gets its own method so that it runs as a separate step before other file writing happens
+  runCreateReactApp(): void {
+    if (this.answers.frontend) {
+      this.log(
+        `running ${chalk.cyanBright.bold(
+          'create-react-app --template typescript'
+        )}\n\n`
+      )
+
+      this.spawnCommandSync('npx', [
+        'create-react-app',
+        this.destinationPath(),
+        '--template',
+        'typescript',
+      ])
+    }
+  }
+
+  async writing(): Promise<void> {
+    if (this.answers.frontend) {
+      // files already exists on disk (from CRA) so read it for real
+      this.log('writing eslintrc and .gitignore')
+
+      await writeFile(
+        this.destinationPath(ESLINT_CONFIG_FILE),
+        await readFile(this.templatePath('eslint.js'), {
+          encoding: 'utf-8',
+        })
+      )
+      await writeFile(
+        this.destinationPath('.gitignore'),
+        await readFile(this.templatePath('gitignore'), { encoding: 'utf-8' })
+      )
+
+      const pkg = JSON.parse(
+        await readFile(this.destinationPath('package.json'), 'utf-8')
+      )
+
+      pkg.scripts.lint = 'eslint src'
+      pkg.scripts['test:watch'] = pkg.scripts.test
+      pkg.scripts.test = `${pkg.scripts.test as string} --watchAll false`
+      pkg.scripts.validate = `yarn test && yarn lint`
+      delete pkg.eslintConfig
+
+      await writeFile(
+        this.destinationPath('package.json'),
+        JSON.stringify(pkg, null, 2)
+      )
+      return
+    }
+
+    // default, memFS behavior
     this.fs.copyTpl(
       this.templatePath(),
       this.destinationPath(),
@@ -136,8 +208,8 @@ export = class App extends Generator {
 
     // if there's a package.json in a subfolder, it messes up `npm pack`, so here we are
     this.fs.writeJSON(this.destinationPath('package.json'), {
-      name: this.name,
       ...pkgJSON,
+      name: this.name,
     })
 
     // also, npm turns `.gitignore` files into `.npmignore` without asking, so don't release it
@@ -149,7 +221,7 @@ export = class App extends Generator {
       },
       {
         from: 'eslint.js',
-        to: '.eslintrc.js',
+        to: ESLINT_CONFIG_FILE,
       },
     ]
 
@@ -164,25 +236,23 @@ export = class App extends Generator {
       return
     }
 
-    const { backend, webserver, cli } = this.answers
+    const frontend = this.answers.frontend
 
     const deps: { [x: string]: string[] } = {
-      frontend: ['react', 'react-dom'],
       backend: [],
       webserver: ['express', 'helmet'],
       cli: ['commander', 'ora', 'chalk'],
+      frontend: [],
     }
-    const devDeps = ['jest']
+    const devDeps = frontend ? [] : ['jest']
 
-    const untypedDevDeps = [
-      // 'typescript',
+    const baseDevDeps = ['eslint', 'eslint-config-xavdid', 'prettier']
+
+    const nonFeDevDeps = [
+      'typescript',
       'ts-jest',
-      // linting
-      `eslint-config-${ESLINT_CONFIG_NAME}`,
-      // formatting
-      'prettier',
       // types
-      ...(backend || webserver || cli ? ['@types/node'] : []),
+      '@types/node',
     ]
 
     // only bring the dependencies we need for this type of project
@@ -195,32 +265,18 @@ export = class App extends Generator {
 
     if (prodDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('prod')} deps, one sec...`)
-      await typedInstall(prodDeps, { packageManager: 'yarn', exact: true })
+      await typedInstall(prodDeps, { packageManager: 'yarn' })
     }
     if (devDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('dev')} deps, one sec...`)
-      await typedInstall(devDeps, {
-        packageManager: 'yarn',
-        exact: true,
-        dev: true,
-      })
+      await typedInstall(devDeps, { packageManager: 'yarn', dev: true })
     }
 
     // either way, we're doing this because they don't need types
     this.log(`\nInstalling ${chalk.cyanBright.bold('the rest')}`)
-    this.yarnInstall(untypedDevDeps, {
+    this.yarnInstall([...baseDevDeps, ...(frontend ? [] : nonFeDevDeps)], {
       dev: true,
-      exact: true,
     })
-
-    this.log(`\nInstalling linting ${chalk.cyanBright.bold('peerDeps')}`)
-    // install peer deps of my eslint config, which is all the linting stuff it depends on
-    this.spawnCommandSync('npx', [
-      'install-peerdeps',
-      '--yarn',
-      '--dev',
-      `eslint-config-${ESLINT_CONFIG_NAME}`,
-    ])
   }
 
   end(): void {
