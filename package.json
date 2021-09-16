@@ -1,6 +1,6 @@
 {
   "name": "generator-xavdid",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "An opinionated generator for my ideal project setup",
   "main": "app/index.js",
   "author": {
