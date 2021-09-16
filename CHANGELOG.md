@@ -1,3 +1,9 @@
+## 1.2.1
+
+_Released `2021-09-15`_
+
+- Use the split `eslint-config-xavdid` and `eslint-config-xavdid-with-react` packages, depending on the project type
+
 ## 1.2.0
 
 _Released `2021-08-14`_
