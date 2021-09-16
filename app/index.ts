@@ -169,9 +169,11 @@ export = class App extends Generator {
 
       await writeFile(
         this.destinationPath(ESLINT_CONFIG_FILE),
-        await readFile(this.templatePath('eslint.js'), {
-          encoding: 'utf-8',
-        })
+        (
+          await readFile(this.templatePath('eslint.js'), {
+            encoding: 'utf-8',
+          })
+        ).replace('xavdid', 'xavdid-with-react')
       )
       await writeFile(
         this.destinationPath('.gitignore'),
@@ -182,6 +184,10 @@ export = class App extends Generator {
         await readFile(this.destinationPath('package.json'), 'utf-8')
       )
 
+      pkg.scripts.start = `BROWSER=none DISABLE_ESLINT_PLUGIN=true ${
+        pkg.scripts.start as string
+      }`
+      pkg.scripts.dev = pkg.scripts.start
       pkg.scripts.lint = 'eslint src'
       pkg.scripts['test:watch'] = pkg.scripts.test
       pkg.scripts.test = `${pkg.scripts.test as string} --watchAll false`
@@ -244,11 +250,13 @@ export = class App extends Generator {
       cli: ['commander', 'ora', 'chalk'],
       frontend: [],
     }
-    const devDeps = frontend ? [] : ['jest']
+    const typedDevDeps = frontend ? [] : ['jest']
 
-    const baseDevDeps = ['eslint', 'eslint-config-xavdid', 'prettier']
+    const commonUntypedDevDeps = ['eslint', 'prettier']
 
+    // non-fe because CRA takes care of all of this
     const nonFeDevDeps = [
+      'eslint-config-xavdid',
       'typescript',
       'ts-jest',
       // types
@@ -267,16 +275,22 @@ export = class App extends Generator {
       this.log(`\nInstalling ${chalk.cyanBright.bold('prod')} deps, one sec...`)
       await typedInstall(prodDeps, { packageManager: 'yarn' })
     }
-    if (devDeps.length > 0) {
+    if (typedDevDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('dev')} deps, one sec...`)
-      await typedInstall(devDeps, { packageManager: 'yarn', dev: true })
+      await typedInstall(typedDevDeps, { packageManager: 'yarn', dev: true })
     }
 
     // either way, we're doing this because they don't need types
     this.log(`\nInstalling ${chalk.cyanBright.bold('the rest')}`)
-    this.yarnInstall([...baseDevDeps, ...(frontend ? [] : nonFeDevDeps)], {
-      dev: true,
-    })
+    this.yarnInstall(
+      [
+        ...commonUntypedDevDeps,
+        ...(frontend ? ['eslint-config-xavdid-with-react'] : nonFeDevDeps),
+      ],
+      {
+        dev: true,
+      }
+    )
   }
 
   end(): void {

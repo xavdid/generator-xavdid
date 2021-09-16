@@ -29,6 +29,11 @@ describe('generator-xavdid:app', () => {
 
     const pkg = require(require.resolve(resPath('package.json')))
     expect(pkg.name).toEqual(name)
+    // these don't get installed during test, so I can't make assertions about them being filled in
+    // expect(pkg.devDependencies['eslint-config-xavdid']).toBeDefined()
+    // expect(
+    //   pkg.devDependencies['eslint-config-xavdid-with-react']
+    // ).toBeUndefined()
 
     const eslintRc = require(resPath('.eslintrc.js'))
     expect(eslintRc.extends).toEqual('xavdid')
