@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: 'xavdid',
+  extends: '@xavdid',
   parserOptions: {
     project: './tsconfig.json',
   },

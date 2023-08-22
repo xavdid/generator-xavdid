@@ -1,18 +1,19 @@
-import typedInstall from 'typed-install'
-import { basename } from 'path'
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { promises } from 'fs'
+import { basename } from 'path'
 
 import chalk = require('chalk')
 import Generator = require('yeoman-generator')
+
+import typedInstall from 'typed-install'
+import { type OptionConfig } from 'yeoman-generator'
 
 const { readFile, writeFile } = promises
 
 // this exact name is important
 const ESLINT_CONFIG_FILE = '.eslintrc.js'
 
-interface Bitmap {
-  [x: string]: boolean
-}
+type Bitmap = Record<string, boolean>
 
 const pkgJSON = {
   version: '0.0.0',
@@ -42,12 +43,8 @@ const pkgJSON = {
       '**/?(*.)+(spec|test).+(ts|tsx|js)',
     ],
     transform: {
-      '^.+\\.(ts|tsx)$': 'ts-jest',
+      '^.+\\.(t|j)sx?$': '@swc/jest',
     },
-  },
-  prettier: {
-    semi: false,
-    singleQuote: true,
   },
 }
 
@@ -56,7 +53,7 @@ export = class App extends Generator {
   options!: { name?: string }
   name: string | undefined
 
-  constructor(args: string[], opts: any) {
+  constructor(args: string[], opts: OptionConfig) {
     super(args, opts)
 
     this.argument('name', {
@@ -83,8 +80,8 @@ export = class App extends Generator {
   async prompting(): Promise<void> {
     this.log(
       `Welcome to the opinionated ${chalk.bgBlue.yellowBright.bold(
-        'xavdid'
-      )}-generator!\n`
+        'xavdid',
+      )}-generator!\n`,
     )
 
     // Q1
@@ -93,15 +90,14 @@ export = class App extends Generator {
     const needName = currentDir === projectsRoot
 
     // we're guessing, double check
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!this.name) {
-      const { name } = await this.prompt([
+      const { name } = await this.prompt<{ name: string }>([
         {
           name: 'name',
           type: 'input',
           message: 'What is the project called?',
           default: needName ? undefined : currentDir,
-          validate: needName ? (s) => s.length > 2 : undefined,
+          validate: needName ? (s: string) => s.length > 2 : undefined,
         },
       ])
       this.name = name
@@ -111,28 +107,27 @@ export = class App extends Generator {
 
     if (basename(this.destinationRoot()) !== this.name) {
       // set new destination root
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.destinationRoot(this.destinationPath(this.name!))
+      this.destinationRoot(this.destinationPath(this.name))
     }
 
     // Q2
     // either FE or "other"
     this._answer(
-      await this.prompt([
+      await this.prompt<Bitmap>([
         {
           type: 'confirm',
           default: false,
           name: 'frontend',
           message: 'Is this a front-end project?',
         },
-      ])
+      ]),
     )
     if (this.answers.frontend) {
       return
     }
 
     const choices = ['Backend', 'Webserver', 'CLI']
-    const { area } = await this.prompt([
+    const { area } = await this.prompt<{ area: string[] }>([
       {
         type: 'checkbox',
         name: 'area',
@@ -149,8 +144,8 @@ export = class App extends Generator {
     if (this.answers.frontend) {
       this.log(
         `running ${chalk.cyanBright.bold(
-          'create-react-app --template typescript'
-        )}\n\n`
+          'create-react-app --template typescript',
+        )}\n\n`,
       )
 
       this.spawnCommandSync('npx', [
@@ -173,22 +168,25 @@ export = class App extends Generator {
           await readFile(this.templatePath('eslint.js'), {
             encoding: 'utf-8',
           })
-        ).replace('xavdid', 'xavdid-with-react')
+        ).replace('xavdid', 'xavdid-with-react'),
       )
       await writeFile(
         this.destinationPath('.gitignore'),
-        await readFile(this.templatePath('gitignore'), { encoding: 'utf-8' })
+        await readFile(this.templatePath('gitignore'), { encoding: 'utf-8' }),
       )
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const pkg = JSON.parse(
-        await readFile(this.destinationPath('package.json'), 'utf-8')
+        await readFile(this.destinationPath('package.json'), 'utf-8'),
       )
 
       pkg.scripts.start = `BROWSER=none DISABLE_ESLINT_PLUGIN=true ${
         pkg.scripts.start as string
       }`
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       pkg.scripts.dev = pkg.scripts.start
       pkg.scripts.lint = 'eslint src'
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       pkg.scripts['test:watch'] = pkg.scripts.test
       pkg.scripts.test = `${pkg.scripts.test as string} --watchAll false`
       pkg.scripts.validate = `yarn test && yarn lint`
@@ -196,7 +194,7 @@ export = class App extends Generator {
 
       await writeFile(
         this.destinationPath('package.json'),
-        JSON.stringify(pkg, null, 2)
+        JSON.stringify(pkg, null, 2),
       )
       return
     }
@@ -209,7 +207,7 @@ export = class App extends Generator {
         name: this.name,
       },
       {},
-      { globOptions: { dot: true } }
+      { globOptions: { dot: true } },
     )
 
     // if there's a package.json in a subfolder, it messes up `npm pack`, so here we are
@@ -241,28 +239,24 @@ export = class App extends Generator {
       this.log('testing, no install')
       return
     }
-
     const frontend = this.answers.frontend
-
-    const deps: { [x: string]: string[] } = {
+    const deps: Record<string, string[]> = {
       backend: [],
       webserver: ['express', 'helmet'],
       cli: ['commander', 'ora', 'chalk'],
       frontend: [],
     }
     const typedDevDeps = frontend ? [] : ['jest']
-
-    const commonUntypedDevDeps = ['eslint', 'prettier']
-
+    const commonUntypedDevDeps = ['eslint', 'prettier', '@xavdid/eslint-config']
     // non-fe because CRA takes care of all of this
     const nonFeDevDeps = [
-      'eslint-config-xavdid',
+      '@xavdid/eslint-config',
       'typescript',
-      'ts-jest',
+      '@swc/core',
+      '@swc/jest',
       // types
       '@types/node',
     ]
-
     // only bring the dependencies we need for this type of project
     let prodDeps: string[] = []
     Object.entries(deps).forEach(([k, v]) => {
@@ -270,26 +264,23 @@ export = class App extends Generator {
         prodDeps = prodDeps.concat(v)
       }
     })
-
     if (prodDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('prod')} deps, one sec...`)
+      // this runs in the cwd, so it only works when in the folder that will become the project
+      // I could replace these (probably) with `this.addDependency` (or `this.addDevDependency`), but up in `writing`
       await typedInstall(prodDeps, { packageManager: 'yarn' })
     }
     if (typedDevDeps.length > 0) {
       this.log(`\nInstalling ${chalk.cyanBright.bold('dev')} deps, one sec...`)
+      // this runs in the cwd, so it only works when in the folder that will become the project
+      // I could replace these (probably) with `this.addDependency` (or `this.addDevDependency`), but up in `writing`
       await typedInstall(typedDevDeps, { packageManager: 'yarn', dev: true })
     }
-
     // either way, we're doing this because they don't need types
     this.log(`\nInstalling ${chalk.cyanBright.bold('the rest')}`)
-    this.yarnInstall(
-      [
-        ...commonUntypedDevDeps,
-        ...(frontend ? ['eslint-config-xavdid-with-react'] : nonFeDevDeps),
-      ],
-      {
-        dev: true,
-      }
+    await typedInstall(
+      [...commonUntypedDevDeps, ...(frontend ? [] : nonFeDevDeps)],
+      { packageManager: 'yarn', dev: true },
     )
   }
 

@@ -28,6 +28,14 @@ Most of the work will take place in `app/index.ts`, to focus there!
 
 To test the unreleased version, run `yo ../path/to/this/folder`
 
+### State of the Project
+
+As of time of writing (`2023-08-21`) Yeoman is releasing it's 6.0.0 version and its docs are out of date. The package is back in working order on Node 18+, but the tests don't work.
+
+I could update it to the new framework once everything is ironed out, but I might not be able to use `typed-install` in the same way.
+
+I'm not sure if I wouldn't get better mileage out of a single clean build and a github template repository. Just in case, I've started one [here](https://github.com/xavdid/xavdid-ts-template).
+
 ## License
 
 MIT © [David Brownman](https://xavd.id)
